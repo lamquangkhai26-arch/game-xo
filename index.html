@@ -2,13 +2,13 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>XO Pro Mobile</title>
+<title>XO Pro Game</title>
 
 <style>
 body {
     margin: 0;
     font-family: Arial;
-    background: linear-gradient(135deg, #4b6cb7, #182848);
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -17,49 +17,51 @@ body {
 
 /* CARD */
 .container {
-    width: 330px;
-    background: #1e2a47;
+    width: 95vw;
+    max-width: 420px;
+    background: #0f1a30;
     padding: 20px;
     border-radius: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
     text-align: center;
     color: white;
 }
 
-/* TITLE */
-h2 {
-    margin-bottom: 5px;
-}
-
-/* TURN */
-.turn {
+/* MENU */
+.menu button {
+    width: 100%;
+    padding: 18px;
     margin: 10px 0;
     font-size: 18px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(45deg, #00c6ff, #0072ff);
+    color: white;
 }
 
 /* BOARD */
 .board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    justify-content: center;
+    gap: 15px;
+    margin: 15px 0;
 }
 
 .cell {
-    width: 90px;
-    height: 90px;
-    background: #0f1a30;
+    width: 110px;
+    height: 110px;
+    background: #16213e;
     border-radius: 15px;
+    font-size: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 32px;
     cursor: pointer;
-    transition: 0.15s;
+    transition: 0.1s;
 }
 
 .cell:active {
-    transform: scale(0.85);
+    transform: scale(0.8);
 }
 
 /* COLORS */
@@ -67,34 +69,35 @@ h2 {
 .O { color: #ff5252; }
 
 .win {
-    background: #4caf50 !important;
-    color: white !important;
+    background: gold !important;
+    color: black !important;
 }
 
 /* BUTTON */
 button {
-    margin-top: 12px;
     padding: 12px;
     width: 100%;
-    border: none;
     border-radius: 12px;
-    background: linear-gradient(45deg, #4facfe, #00f2fe);
+    border: none;
+    background: linear-gradient(45deg, #ff9800, #ff5722);
     color: white;
     font-size: 16px;
 }
 
+.hidden { display: none; }
+
 /* CONFETTI */
 .confetti {
     position: fixed;
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     top: 0;
-    animation: fall 3s linear infinite;
+    animation: fall linear forwards;
 }
 
 @keyframes fall {
     to {
-        transform: translateY(100vh) rotate(360deg);
+        transform: translateY(100vh) rotate(720deg);
     }
 }
 </style>
@@ -104,26 +107,42 @@ button {
 
 <!-- ÂM THANH -->
 <audio id="bgMusic" loop>
-<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b0cfa.mp3">
+<source src="https://cdn.pixabay.com/audio/2023/03/27/audio_7c4c0c8c2f.mp3">
 </audio>
 
 <audio id="clickSound">
-<source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_270c4c1a3c.mp3">
+<source src="https://cdn.pixabay.com/audio/2022/03/15/audio_8c983481b1.mp3">
+</audio>
+
+<audio id="winSound">
+<source src="https://cdn.pixabay.com/audio/2022/03/15/audio_c4c5d9b59d.mp3">
 </audio>
 
 <div class="container">
-    <h2>🎮 XO PRO</h2>
-    <div class="turn" id="status">Lượt: X</div>
 
+<!-- MENU -->
+<div id="menu">
+    <h2>🎮 GAME XO</h2>
+    <div class="menu">
+        <button onclick="startGame('ai')">🤖 Chơi với AI</button>
+        <button onclick="startGame('2p')">👥 2 Người</button>
+    </div>
+</div>
+
+<!-- GAME -->
+<div id="game" class="hidden">
+    <h2 id="status">Lượt: X</h2>
     <div class="board" id="board"></div>
+    <button onclick="backMenu()">🔄 Quay lại</button>
+</div>
 
-    <button onclick="restart()">🔄 Reset Game</button>
 </div>
 
 <script>
 let board = ["","","","","","","","",""];
 let current = "X";
 let gameOver = false;
+let mode = "ai";
 
 const winCombo = [
 [0,1,2],[3,4,5],[6,7,8],
@@ -131,34 +150,46 @@ const winCombo = [
 [0,4,8],[2,4,6]
 ];
 
-document.body.addEventListener("click", () => {
-    let music = document.getElementById("bgMusic");
-    music.volume = 0.3;
-    music.play();
-}, {once:true});
+/* bật nhạc khi click */
+document.body.addEventListener("click", ()=>{
+    let m=document.getElementById("bgMusic");
+    m.volume=0.3;
+    m.play().catch(()=>{});
+},{once:true});
 
-function createBoard() {
-    const b = document.getElementById("board");
-    b.innerHTML = "";
+function startGame(m){
+    mode = m;
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById("game").classList.remove("hidden");
+    createBoard();
+}
+
+function createBoard(){
+    const b=document.getElementById("board");
+    b.innerHTML="";
+    board=["","","","","","","","",""];
+    gameOver=false;
+    current="X";
 
     board.forEach((_,i)=>{
-        let cell = document.createElement("div");
-        cell.className = "cell";
-        cell.onclick = ()=>move(i);
+        let cell=document.createElement("div");
+        cell.className="cell";
+        cell.onclick=()=>move(i);
         b.appendChild(cell);
     });
+
+    updateStatus();
 }
 
 function move(i){
-    if(board[i] !== "" || gameOver) return;
+    if(board[i]!==""||gameOver) return;
 
     playClick();
-
-    board[i] = current;
+    board[i]=current;
     render();
 
     if(checkWin()){
-        endGame(current + " thắng!");
+        endGame(current+" thắng!");
         return;
     }
 
@@ -167,32 +198,32 @@ function move(i){
         return;
     }
 
-    current = "O";
-    document.getElementById("status").textContent = "AI đang nghĩ...";
+    current=current==="X"?"O":"X";
+    updateStatus();
 
-    setTimeout(aiMove, 300);
+    if(mode==="ai" && current==="O"){
+        setTimeout(aiMove,300);
+    }
 }
 
-/* AI SIÊU KHÓ */
+/* AI */
 function aiMove(){
-    let bestScore = -Infinity;
-    let move;
+    let best=-Infinity,move;
 
     for(let i=0;i<9;i++){
         if(board[i]===""){
             board[i]="O";
-            let score = minimax(false);
+            let score=minimax(false);
             board[i]="";
-            if(score>bestScore){
-                bestScore = score;
-                move = i;
+            if(score>best){
+                best=score;
+                move=i;
             }
         }
     }
 
     playClick();
-
-    board[move] = "O";
+    board[move]="O";
     render();
 
     if(checkWin()){
@@ -200,12 +231,12 @@ function aiMove(){
         return;
     }
 
-    current = "X";
-    document.getElementById("status").textContent = "Lượt: X";
+    current="X";
+    updateStatus();
 }
 
 function minimax(isMax){
-    let res = checkWinnerMini();
+    let res=checkWinnerMini();
     if(res!==null) return res;
 
     if(isMax){
@@ -218,7 +249,7 @@ function minimax(isMax){
             }
         }
         return best;
-    } else {
+    }else{
         let best=Infinity;
         for(let i=0;i<9;i++){
             if(board[i]===""){
@@ -233,8 +264,8 @@ function minimax(isMax){
 
 function checkWinnerMini(){
     for(let c of winCombo){
-        let [a,b,d]=c;
-        if(board[a] && board[a]==board[b] && board[a]==board[d]){
+        let[a,b,d]=c;
+        if(board[a]&&board[a]==board[b]&&board[a]==board[d]){
             return board[a]=="O"?1:-1;
         }
     }
@@ -244,7 +275,7 @@ function checkWinnerMini(){
 
 function render(){
     document.querySelectorAll(".cell").forEach((c,i)=>{
-        c.textContent = board[i];
+        c.textContent=board[i];
         c.classList.remove("X","O");
         if(board[i]) c.classList.add(board[i]);
     });
@@ -261,19 +292,24 @@ function checkWin(){
     });
 }
 
+/* KẾT THÚC */
 function endGame(msg){
-    document.getElementById("status").textContent = msg;
-    gameOver = true;
-    confetti();
+    document.getElementById("status").textContent=msg;
+    gameOver=true;
+
+    document.getElementById("winSound").play();
+
+    showVictoryText(msg);
+    confettiBoom();
 }
 
-function restart(){
-    board=["","","","","","","","",""];
-    current="X";
-    gameOver=false;
-    createBoard();
-    render();
-    document.getElementById("status").textContent="Lượt: X";
+function updateStatus(){
+    document.getElementById("status").textContent="Lượt: "+current;
+}
+
+function backMenu(){
+    document.getElementById("game").classList.add("hidden");
+    document.getElementById("menu").classList.remove("hidden");
 }
 
 function playClick(){
@@ -282,18 +318,35 @@ function playClick(){
     s.play();
 }
 
-function confetti(){
-    for(let i=0;i<120;i++){
+/* CHỮ CHIẾN THẮNG */
+function showVictoryText(text){
+    let t=document.createElement("div");
+    t.innerText=text;
+    t.style.position="fixed";
+    t.style.top="40%";
+    t.style.width="100%";
+    t.style.textAlign="center";
+    t.style.fontSize="40px";
+    t.style.color="yellow";
+    t.style.fontWeight="bold";
+    document.body.appendChild(t);
+
+    setTimeout(()=>t.remove(),2000);
+}
+
+/* CONFETTI XỊN */
+function confettiBoom(){
+    for(let i=0;i<300;i++){
         let d=document.createElement("div");
         d.className="confetti";
         d.style.left=Math.random()*100+"vw";
         d.style.background=`hsl(${Math.random()*360},100%,50%)`;
+        d.style.animationDuration=(Math.random()*2+2)+"s";
         document.body.appendChild(d);
-        setTimeout(()=>d.remove(),3000);
+
+        setTimeout(()=>d.remove(),4000);
     }
 }
-
-createBoard();
 </script>
 
 </body>
