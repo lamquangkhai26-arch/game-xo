@@ -2,102 +2,85 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Game XO Pro Max++</title>
+<title>XO Pro Mobile</title>
 
 <style>
 body {
     margin: 0;
     font-family: Arial;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: white;
-    text-align: center;
-}
-
-/* MENU */
-.menu {
+    background: linear-gradient(135deg, #4b6cb7, #182848);
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
 }
 
-.menu button {
-    width: 85%;
-    padding: 25px;
-    margin: 15px;
-    font-size: 22px;
-    border-radius: 15px;
-    border: none;
-    background: linear-gradient(45deg, #00c6ff, #0072ff);
+/* CARD */
+.container {
+    width: 330px;
+    background: #1e2a47;
+    padding: 20px;
+    border-radius: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
     color: white;
-    cursor: pointer;
-    box-shadow: 0 0 15px rgba(0,198,255,0.6);
-    transition: 0.3s;
 }
 
-.menu button:hover {
-    transform: scale(1.05);
+/* TITLE */
+h2 {
+    margin-bottom: 5px;
 }
 
-/* GAME */
-#game {
-    display: none;
-    padding-top: 10px;
+/* TURN */
+.turn {
+    margin: 10px 0;
+    font-size: 18px;
 }
 
+/* BOARD */
 .board {
-    width: 95vw;
-    height: 70vh;
-    margin: auto;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: 12px;
+    justify-content: center;
 }
 
 .cell {
-    background: rgba(255,255,255,0.95);
+    width: 90px;
+    height: 90px;
+    background: #0f1a30;
     border-radius: 15px;
-    font-size: 10vw;
     display: flex;
     justify-content: center;
     align-items: center;
-    color: black;
+    font-size: 32px;
     cursor: pointer;
-    transition: 0.2s;
-}
-
-.cell:hover {
-    transform: scale(1.05);
+    transition: 0.15s;
 }
 
 .cell:active {
-    transform: scale(0.9);
+    transform: scale(0.85);
 }
 
-.X { color: red; }
-.O { color: blue; }
+/* COLORS */
+.X { color: #4caf50; }
+.O { color: #ff5252; }
 
 .win {
     background: #4caf50 !important;
     color: white !important;
 }
 
-/* STATUS */
-#status {
-    margin-top: 10px;
-    font-size: 20px;
-}
-
 /* BUTTON */
-#restart {
-    margin-top: 10px;
-    padding: 15px 25px;
-    font-size: 18px;
-    border-radius: 10px;
+button {
+    margin-top: 12px;
+    padding: 12px;
+    width: 100%;
     border: none;
-    background: #ff9800;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
     color: white;
+    font-size: 16px;
 }
 
 /* CONFETTI */
@@ -121,102 +104,86 @@ body {
 
 <!-- ÂM THANH -->
 <audio id="bgMusic" loop>
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b0cfa.mp3">
+<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9b0cfa.mp3">
 </audio>
 
 <audio id="clickSound">
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_270c4c1a3c.mp3">
+<source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_270c4c1a3c.mp3">
 </audio>
 
-<!-- MENU -->
-<div class="menu" id="menu">
-    <h1>🎮 GAME XO PRO MAX++</h1>
-    <button onclick="startGame('ai')">🤖 Chơi với AI</button>
-    <button onclick="startGame('2p')">👥 2 Người</button>
-</div>
+<div class="container">
+    <h2>🎮 XO PRO</h2>
+    <div class="turn" id="status">Lượt: X</div>
 
-<!-- GAME -->
-<div id="game">
     <div class="board" id="board"></div>
-    <div id="status"></div>
-    <button id="restart" onclick="restart()">🔄 Chơi lại</button>
+
+    <button onclick="restart()">🔄 Reset Game</button>
 </div>
 
 <script>
 let board = ["","","","","","","","",""];
 let current = "X";
-let mode = "";
 let gameOver = false;
 
 const winCombo = [
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
+[0,1,2],[3,4,5],[6,7,8],
+[0,3,6],[1,4,7],[2,5,8],
+[0,4,8],[2,4,6]
 ];
 
-function startGame(m) {
-    mode = m;
-    document.getElementById("menu").style.display = "none";
-    document.getElementById("game").style.display = "block";
-    document.getElementById("bgMusic").play();
-    createBoard();
-}
+document.body.addEventListener("click", () => {
+    let music = document.getElementById("bgMusic");
+    music.volume = 0.3;
+    music.play();
+}, {once:true});
 
 function createBoard() {
-    const boardDiv = document.getElementById("board");
-    boardDiv.innerHTML = "";
-    board = ["","","","","","","","",""];
-    gameOver = false;
-    current = "X";
+    const b = document.getElementById("board");
+    b.innerHTML = "";
 
-    board.forEach((_, i) => {
-        const cell = document.createElement("div");
+    board.forEach((_,i)=>{
+        let cell = document.createElement("div");
         cell.className = "cell";
-        cell.onclick = () => move(i);
-        boardDiv.appendChild(cell);
+        cell.onclick = ()=>move(i);
+        b.appendChild(cell);
     });
-
-    updateStatus();
 }
 
-function move(i) {
-    if (board[i] !== "" || gameOver) return;
+function move(i){
+    if(board[i] !== "" || gameOver) return;
 
     playClick();
 
     board[i] = current;
     render();
 
-    if (checkWin()) {
+    if(checkWin()){
         endGame(current + " thắng!");
         return;
     }
 
-    if (!board.includes("")) {
+    if(!board.includes("")){
         endGame("Hòa!");
         return;
     }
 
-    current = current === "X" ? "O" : "X";
-    updateStatus();
+    current = "O";
+    document.getElementById("status").textContent = "AI đang nghĩ...";
 
-    if (mode === "ai" && current === "O") {
-        setTimeout(aiMove, 300);
-    }
+    setTimeout(aiMove, 300);
 }
 
-/* ===== AI MINIMAX ===== */
-function aiMove() {
+/* AI SIÊU KHÓ */
+function aiMove(){
     let bestScore = -Infinity;
     let move;
 
-    for (let i = 0; i < 9; i++) {
-        if (board[i] === "") {
-            board[i] = "O";
-            let score = minimax(board, 0, false);
-            board[i] = "";
-
-            if (score > bestScore) {
+    for(let i=0;i<9;i++){
+        if(board[i]===""){
+            board[i]="O";
+            let score = minimax(false);
+            board[i]="";
+            if(score>bestScore){
                 bestScore = score;
                 move = i;
             }
@@ -228,70 +195,65 @@ function aiMove() {
     board[move] = "O";
     render();
 
-    if (checkWin()) {
+    if(checkWin()){
         endGame("AI thắng!");
         return;
     }
 
     current = "X";
-    updateStatus();
+    document.getElementById("status").textContent = "Lượt: X";
 }
 
-function minimax(board, depth, isMaximizing) {
-    let result = checkWinnerMini();
+function minimax(isMax){
+    let res = checkWinnerMini();
+    if(res!==null) return res;
 
-    if (result !== null) return result;
-
-    if (isMaximizing) {
-        let bestScore = -Infinity;
-        for (let i = 0; i < 9; i++) {
-            if (board[i] === "") {
-                board[i] = "O";
-                let score = minimax(board, depth + 1, false);
-                board[i] = "";
-                bestScore = Math.max(score, bestScore);
+    if(isMax){
+        let best=-Infinity;
+        for(let i=0;i<9;i++){
+            if(board[i]===""){
+                board[i]="O";
+                best=Math.max(best,minimax(false));
+                board[i]="";
             }
         }
-        return bestScore;
+        return best;
     } else {
-        let bestScore = Infinity;
-        for (let i = 0; i < 9; i++) {
-            if (board[i] === "") {
-                board[i] = "X";
-                let score = minimax(board, depth + 1, true);
-                board[i] = "";
-                bestScore = Math.min(score, bestScore);
+        let best=Infinity;
+        for(let i=0;i<9;i++){
+            if(board[i]===""){
+                board[i]="X";
+                best=Math.min(best,minimax(true));
+                board[i]="";
             }
         }
-        return bestScore;
+        return best;
     }
 }
 
-function checkWinnerMini() {
-    for (let combo of winCombo) {
-        let [a,b,c] = combo;
-        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-            if (board[a] === "O") return 1;
-            if (board[a] === "X") return -1;
+function checkWinnerMini(){
+    for(let c of winCombo){
+        let [a,b,d]=c;
+        if(board[a] && board[a]==board[b] && board[a]==board[d]){
+            return board[a]=="O"?1:-1;
         }
     }
-    if (!board.includes("")) return 0;
+    if(!board.includes("")) return 0;
     return null;
 }
-/* ===== END AI ===== */
 
-function render() {
-    document.querySelectorAll(".cell").forEach((cell,i)=>{
-        cell.textContent = board[i];
-        cell.classList.remove("X","O");
-        if (board[i]) cell.classList.add(board[i]);
+function render(){
+    document.querySelectorAll(".cell").forEach((c,i)=>{
+        c.textContent = board[i];
+        c.classList.remove("X","O");
+        if(board[i]) c.classList.add(board[i]);
     });
 }
 
-function checkWin() {
-    return winCombo.some(combo => {
-        if (combo.every(i => board[i] === current)) {
-            combo.forEach(i=>{
+function checkWin(){
+    return winCombo.some(c=>{
+        if(c.every(i=>board[i]===current)){
+            c.forEach(i=>{
                 document.querySelectorAll(".cell")[i].classList.add("win");
             });
             return true;
@@ -299,37 +261,39 @@ function checkWin() {
     });
 }
 
-function endGame(msg) {
+function endGame(msg){
     document.getElementById("status").textContent = msg;
     gameOver = true;
     confetti();
 }
 
-function updateStatus() {
-    document.getElementById("status").textContent = "Lượt: " + current;
-}
-
-function restart() {
+function restart(){
+    board=["","","","","","","","",""];
+    current="X";
+    gameOver=false;
     createBoard();
+    render();
+    document.getElementById("status").textContent="Lượt: X";
 }
 
-function playClick() {
-    let sound = document.getElementById("clickSound");
-    sound.currentTime = 0;
-    sound.play();
+function playClick(){
+    let s=document.getElementById("clickSound");
+    s.currentTime=0;
+    s.play();
 }
 
-function confetti() {
-    for (let i=0;i<40;i++) {
-        let div = document.createElement("div");
-        div.className = "confetti";
-        div.style.left = Math.random()*100 + "vw";
-        div.style.background = `hsl(${Math.random()*360},100%,50%)`;
-        document.body.appendChild(div);
-
-        setTimeout(()=>div.remove(),3000);
+function confetti(){
+    for(let i=0;i<120;i++){
+        let d=document.createElement("div");
+        d.className="confetti";
+        d.style.left=Math.random()*100+"vw";
+        d.style.background=`hsl(${Math.random()*360},100%,50%)`;
+        document.body.appendChild(d);
+        setTimeout(()=>d.remove(),3000);
     }
 }
+
+createBoard();
 </script>
 
 </body>
