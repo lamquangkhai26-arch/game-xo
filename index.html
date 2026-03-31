@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Game XO Pro</title>
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    margin-top: 20px;
+}
+
+.menu button, #restart {
+    padding: 12px 25px;
+    margin: 10px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #00c6ff;
+    color: black;
+    transition: 0.3s;
+}
+
+.menu button:hover, #restart:hover {
+    background: #0072ff;
+    color: white;
+}
+
+.board {
+    display: none;
+    grid-template-columns: repeat(3, 120px);
+    gap: 10px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.cell {
+    width: 120px;
+    height: 120px;
+    background: #111;
+    border-radius: 15px;
+    font-size: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.cell:hover {
+    background: #333;
+}
+
+#status {
+    margin-top: 15px;
+    font-size: 22px;
+}
+
+/* 🎉 Confetti */
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: red;
+    top: -10px;
+    animation: fall 3s linear infinite;
+}
+
+@keyframes fall {
+    to {
+        transform: translateY(100vh);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎮 GAME XO PRO</h1>
+
+<div class="menu">
+    <button onclick="startGame('ai')">🤖 Chơi với AI</button>
+    <button onclick="startGame('pvp')">👥 2 Người</button>
+</div>
+
+<div id="status"></div>
+
+<div class="board" id="board"></div>
+
+<button id="restart" onclick="resetGame()" style="display:none;">🔄 Chơi lại</button>
+
+<script>
+let board = ["","","","","","","","",""];
+let currentPlayer = "X";
+let gameActive = true;
+let mode = "";
+
+const boardDiv = document.getElementById("board");
+const statusText = document.getElementById("status");
+const restartBtn = document.getElementById("restart");
+
+function startGame(selectedMode){
+    mode = selectedMode;
+    document.querySelector(".menu").style.display = "none";
+    boardDiv.style.display = "grid";
+    restartBtn.style.display = "inline-block";
+    statusText.innerText = "Lượt: X";
+    createBoard();
+}
+
+function createBoard(){
+    boardDiv.innerHTML = "";
+    board.forEach((cell, i)=>{
+        let div = document.createElement("div");
+        div.classList.add("cell");
+        div.innerText = cell;
+        div.onclick = ()=>handleClick(i);
+        boardDiv.appendChild(div);
+    });
+}
+
+function handleClick(i){
+    if(board[i] !== "" || !gameActive) return;
+
+    board[i] = currentPlayer;
+    checkWinner();
+
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+    statusText.innerText = "Lượt: " + currentPlayer;
+
+    createBoard();
+
+    if(mode === "ai" && currentPlayer === "O" && gameActive){
+        setTimeout(aiMove, 500);
+    }
+}
+
+function aiMove(){
+    let empty = board.map((v,i)=>v===""?i:null).filter(v=>v!==null);
+    let move = empty[Math.floor(Math.random()*empty.length)];
+    board[move] = "O";
+    checkWinner();
+    currentPlayer = "X";
+    statusText.innerText = "Lượt: X";
+    createBoard();
+}
+
+function checkWinner(){
+    let win = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ];
+
+    for(let p of win){
+        let [a,b,c] = p;
+        if(board[a] && board[a]===board[b] && board[a]===board[c]){
+            statusText.innerText = "🎉 " + board[a] + " thắng!";
+            gameActive = false;
+            confetti();
+            return;
+        }
+    }
+
+    if(!board.includes("")){
+        statusText.innerText = "Hòa!";
+        gameActive = false;
+    }
+}
+
+function resetGame(){
+    board = ["","","","","","","","",""];
+    currentPlayer = "X";
+    gameActive = true;
+    statusText.innerText = "Lượt: X";
+    createBoard();
+}
+
+/* 🎉 Hiệu ứng tung hoa */
+function confetti(){
+    for(let i=0;i<100;i++){
+        let div = document.createElement("div");
+        div.className = "confetti";
+        div.style.left = Math.random()*100+"vw";
+        div.style.background = ["red","yellow","blue","green","pink"][Math.floor(Math.random()*5)];
+        div.style.animationDuration = (Math.random()*3+2)+"s";
+        document.body.appendChild(div);
+
+        setTimeout(()=>div.remove(),3000);
+    }
+}
+</script>
+
+</body>
+</html>
