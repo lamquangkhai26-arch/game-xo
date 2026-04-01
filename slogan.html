@@ -2,168 +2,99 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>LED PRO MAX</title>
+<title>LED PRO</title>
 
 <style>
 body {
-  margin: 0;
-  background: black;
-  font-family: Arial;
-  overflow: hidden;
+    margin: 0;
+    background: black;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    cursor: pointer;
 }
 
-/* MENU */
-#menu {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.box {
-  background: #111;
-  padding: 30px;
-  border-radius: 15px;
-  text-align: center;
-  color: white;
-}
-
-input, select {
-  width: 250px;
-  padding: 12px;
-  font-size: 18px;
-  margin: 8px 0;
-}
-
-button {
-  padding: 12px 20px;
-  font-size: 18px;
-  border: none;
-  border-radius: 8px;
-  background: #00ffcc;
-  cursor: pointer;
-}
-
-/* LED SCREEN */
-#screen {
-  display: none;
-  width: 100vw;
-  height: 100vh;
-  background: black;
-  position: relative;
-}
-
+/* chữ siêu to để nhìn xa */
 #text {
-  position: absolute;
-  white-space: nowrap;
-  font-size: 90px;
-  font-weight: bold;
-  top: 40%;
-  left: 100%;
-  animation: blink 0.3s infinite;
+    font-size: 12vw;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 1vw;
 }
 
-/* NHẤP NHÁY */
+/* hiệu ứng LED */
+.led {
+    text-shadow:
+        0 0 10px #0f0,
+        0 0 20px #0f0,
+        0 0 40px #0f0,
+        0 0 80px #0f0;
+    color: #0f0;
+}
+
+/* nhấp nháy */
+.blink {
+    animation: blink 0.5s infinite;
+}
+
 @keyframes blink {
-  0%,100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-/* NÚT BACK */
-#backBtn {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  padding: 10px;
-  background: red;
-  color: white;
-  display: none;
+    0% { opacity: 1; }
+    50% { opacity: 0.2; }
+    100% { opacity: 1; }
 }
 </style>
 </head>
 
 <body>
 
-<div id="menu">
-  <div class="box">
-    <h2>LED Slogan Pro</h2>
-
-    <input id="inputText" placeholder="Nhập slogan..."><br>
-
-    <select id="speed">
-      <option value="2">Nhanh</option>
-      <option value="4">Trung bình</option>
-      <option value="7">Chậm</option>
-    </select><br>
-
-    <button onclick="start()">Chạy LED</button>
-  </div>
-</div>
-
-<div id="screen" onclick="stop()">
-  <div id="backBtn" onclick="back(event)">⬅ Quay lại</div>
-  <div id="text"></div>
-</div>
-
-<!-- ÂM THANH -->
-<audio id="tick" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
-<audio id="bg" src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9b0cfa.mp3" loop></audio>
+<div id="text" class="led"></div>
 
 <script>
-let interval, colorInterval;
+let slogan = "CHAO MUNG BAN DEN VOI WEBSITE!";
+let text = document.getElementById("text");
 
-function start(){
-  let text = document.getElementById("inputText").value;
-  let speed = document.getElementById("speed").value;
+/* tách từng chữ */
+let chars = slogan.split("");
 
-  if(!text) return alert("Nhập slogan!");
+/* chế độ */
+let mode = 1; // 1 = nhấp nháy toàn bộ, 2 = từng chữ
+let index = 0;
 
-  document.getElementById("menu").style.display="none";
-  document.getElementById("screen").style.display="block";
-
-  let t = document.getElementById("text");
-  t.innerText = text;
-
-  let x = window.innerWidth;
-
-  // chạy chữ
-  interval = setInterval(()=>{
-    x -= speed;
-    t.style.left = x + "px";
-
-    if(x < -t.offsetWidth){
-      x = window.innerWidth;
-    }
-  },20);
-
-  // đổi màu
-  colorInterval = setInterval(()=>{
-    let color = `hsl(${Math.random()*360},100%,50%)`;
-    t.style.color = color;
-    t.style.textShadow = `0 0 20px ${color},0 0 40px ${color}`;
-  },200);
-
-  // nhạc nền
-  document.getElementById("bg").volume = 0.3;
-  document.getElementById("bg").play();
-
-  // âm thanh tick
-  setInterval(()=>{
-    document.getElementById("tick").play();
-  },300);
+/* MODE 1: hiển thị full + nhấp nháy */
+function mode1() {
+    text.innerHTML = slogan;
+    text.classList.add("blink");
 }
 
-function stop(){
-  clearInterval(interval);
-  clearInterval(colorInterval);
-  document.getElementById("backBtn").style.display="block";
+/* MODE 2: hiện từng chữ */
+function mode2() {
+    text.classList.remove("blink");
+
+    setInterval(() => {
+        text.innerHTML = chars[index];
+        text.classList.add("blink");
+
+        index++;
+        if (index >= chars.length) index = 0;
+    }, 300);
 }
 
-function back(e){
-  e.stopPropagation();
-  document.getElementById("screen").style.display="none";
-  document.getElementById("menu").style.display="flex";
-  document.getElementById("backBtn").style.display="none";
+/* đổi chế độ khi bấm */
+document.body.onclick = () => {
+    mode++;
+
+    if (mode > 2) mode = 1;
+
+    location.reload(); // reset cho dễ
+};
+
+/* chạy */
+if (mode === 1) {
+    mode1();
+} else {
+    mode2();
 }
 </script>
 
