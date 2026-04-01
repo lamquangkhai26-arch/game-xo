@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bảng LED Slogan Cực Lớn</title>
+    <title>Bảng LED Chuyên Nghiệp</title>
     <style>
         :root {
-            --led-color: #ff0000; /* Màu mặc định: Đỏ */
-            --bg-color: #050505;
+            --led-color: #ff0000;
         }
 
         body, html {
@@ -15,66 +14,62 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--bg-color);
+            background-color: black;
             color: white;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: sans-serif;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
-        /* Giao diện nhập liệu */
+        /* Màn hình nhập liệu */
         #setup-screen {
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
             gap: 20px;
-            z-index: 100;
-            text-align: center;
-            padding: 20px;
         }
 
-        input[type="text"] {
+        input {
             padding: 15px;
             font-size: 1.2rem;
-            border-radius: 8px;
-            border: 2px solid #333;
-            background: #1a1a1a;
-            color: white;
-            width: 300px;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 10px;
+            border: none;
         }
 
         button {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            background-color: #ff0000;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: #ff0000;
             color: white;
             border: none;
-            border-radius: 8px;
-            cursor: pointer;
+            border-radius: 10px;
             font-weight: bold;
-            transition: 0.3s;
+            cursor: pointer;
         }
 
-        button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-        }
-
-        /* Màn hình LED */
+        /* Màn hình hiển thị LED */
         #led-screen {
-            display: none; /* Ẩn lúc đầu */
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: black;
-            display: flex;
+            background: black;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            user-select: none;
+        }
+
+        /* ÉP MÀN HÌNH NGANG KHI HIỂN THỊ */
+        @media screen and (orientation: portrait) {
+            #led-text {
+                transform: rotate(90deg);
+                width: 100vh; /* Chữ sẽ chạy theo chiều cao máy (lúc này là chiều ngang màn hình) */
+            }
         }
 
         #led-text {
@@ -82,121 +77,114 @@
             text-transform: uppercase;
             text-align: center;
             white-space: nowrap;
-            line-height: 1;
-            /* Hiệu ứng LED phát sáng */
-            text-shadow: 
-                0 0 10px var(--led-color),
-                0 0 20px var(--led-color),
-                0 0 40px var(--led-color),
-                0 0 80px var(--led-color);
-            transition: color 0.5s ease;
-        }
-
-        /* Hiệu ứng chớp nháy (Blink) */
-        .blink-animation {
-            animation: blink 0.4s infinite alternate;
+            display: inline-block;
+            transition: color 0.3s;
+            /* Hiệu ứng LED */
+            text-shadow: 0 0 20px var(--led-color), 0 0 40px var(--led-color), 0 0 80px var(--led-color);
+            animation: blink 0.2s infinite alternate;
         }
 
         @keyframes blink {
             from { opacity: 1; }
-            to { opacity: 0.1; }
+            to { opacity: 0.5; }
         }
 
-        /* Ẩn các phần tử khi vào chế độ hiển thị */
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="setup-screen">
-        <h1 style="color: #ff0000;">LED BOARD PRO</h1>
-        <input type="text" id="slogan-input" placeholder="Nhập slogan của bạn..." maxlength="50">
+        <h2 style="color: var(--led-color)">NHẬP NỘI DUNG LED</h2>
+        <input type="text" id="user-input" placeholder="Nhập câu bạn muốn hiển thị...">
         <button onclick="startLED()">BẮT ĐẦU</button>
-        <p style="font-size: 0.8rem; color: #666;">Bấm vào màn hình sau khi chạy để đổi chế độ</p>
     </div>
 
-    <div id="led-screen" class="hidden" onclick="toggleMode()">
-        <div id="led-text" class="blink-animation">CHỮ LED</div>
+    <div id="led-screen" onclick="toggleMode()">
+        <div id="led-text"></div>
     </div>
 
     <script>
-        const setupScreen = document.getElementById('setup-screen');
-        const ledScreen = document.getElementById('led-screen');
-        const ledText = document.getElementById('led-text');
-        const sloganInput = document.getElementById('slogan-input');
+        const setup = document.getElementById('setup-screen');
+        const screen = document.getElementById('led-screen');
+        const textDisplay = document.getElementById('led-text');
+        const inputField = document.getElementById('user-input');
 
-        let slogan = "";
-        let currentMode = 1; // 1: Hiện cả câu, 2: Hiện từng chữ
-        let flashInterval = null;
+        let words = [];
+        let currentMode = 1; 
+        let intervalId = null;
         let colorIndex = 0;
-        const colors = ['#ff0000', '#00ff00', '#ffff00', '#00ffff', '#ff00ff', '#ffffff'];
+        const colors = ['#FF0000', '#00FF00', '#FFFF00', '#00FFFF', '#FF00FF', '#FFFFFF'];
 
         function startLED() {
-            slogan = sloganInput.value.trim() || "HELLO";
-            setupScreen.classList.add('hidden');
-            ledScreen.classList.remove('hidden');
+            const rawText = inputField.value.trim();
+            if (!rawText) return alert("Vui lòng nhập nội dung!");
+
+            // Tách câu thành mảng các từ (dựa trên khoảng trắng)
+            words = rawText.split(/\s+/);
             
-            // Yêu cầu Toàn màn hình
+            setup.classList.add('hidden');
+            screen.style.display = 'flex';
+
+            // Yêu cầu toàn màn hình
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen();
             }
 
-            updateDisplay();
+            updateView();
             startColorCycle();
         }
 
         function toggleMode() {
             currentMode = currentMode === 1 ? 2 : 1;
-            updateDisplay();
+            updateView();
         }
 
-        function updateDisplay() {
-            // Xóa bỏ interval cũ nếu có
-            if (flashInterval) clearInterval(flashInterval);
-            ledText.innerText = "";
+        function updateView() {
+            if (intervalId) clearInterval(intervalId);
+            textDisplay.innerText = "";
 
             if (currentMode === 1) {
-                // CHẾ ĐỘ 1: Hiện toàn bộ
-                ledText.innerText = slogan;
-                adjustFontSize(slogan.length);
+                // CHẾ ĐỘ 1: Hiện nguyên câu
+                const fullText = words.join(" ");
+                textDisplay.innerText = fullText;
+                fitText(fullText.length);
             } else {
-                // CHẾ ĐỘ 2: Hiện từng ký tự/chữ
-                let words = slogan.split(""); // Chia theo ký tự để tối đa kích thước
+                // CHẾ ĐỘ 2: Hiện từng từ (0.5 giây)
                 let i = 0;
-                
-                adjustFontSize(1); // Cỡ chữ cực đại cho 1 ký tự
-                
-                flashInterval = setInterval(() => {
-                    ledText.innerText = words[i];
+                const showWord = () => {
+                    const word = words[i];
+                    textDisplay.innerText = word;
+                    fitText(word.length);
                     i = (i + 1) % words.length;
-                }, 300); // 0.3 giây chuyển chữ
+                };
+                showWord();
+                intervalId = setInterval(showWord, 500);
             }
         }
 
-        function adjustFontSize(len) {
-            // Tính toán responsive: Càng ít chữ càng to
-            // 90vw chia cho số ký tự nhưng có giới hạn
-            let size = Math.floor(95 / (len * 0.7)); 
-            if (size > 80) size = 80; // Giới hạn tối đa 80vh
-            ledText.style.fontSize = size + "vw";
+        function fitText(len) {
+            // Tự động tính cỡ chữ dựa trên số lượng ký tự để luôn chiếm full màn hình
+            // 90vw là chiều ngang, chia cho số ký tự
+            let fontSize = 95 / (len * 0.6); 
+            if (fontSize > 85) fontSize = 85; // Không để to quá vượt chiều cao
+            textDisplay.style.fontSize = fontSize + "vw";
         }
 
-        // Tự động đổi màu LED cho sinh động
         function startColorCycle() {
             setInterval(() => {
                 colorIndex = (colorIndex + 1) % colors.length;
-                const newColor = colors[colorIndex];
-                document.documentElement.style.setProperty('--led-color', newColor);
-                ledText.style.color = newColor;
-            }, 2000); // Đổi màu mỗi 2 giây
+                document.documentElement.style.setProperty('--led-color', colors[colorIndex]);
+                textDisplay.style.color = colors[colorIndex];
+            }, 2000);
         }
 
-        // Thoát full màn hình bằng phím Esc sẽ hiện lại menu (tùy trình duyệt)
+        // Thoát full màn hình thì quay lại menu
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
-                ledScreen.classList.add('hidden');
-                setupScreen.classList.remove('hidden');
-                if (flashInterval) clearInterval(flashInterval);
+                screen.style.display = 'none';
+                setup.classList.remove('hidden');
+                if (intervalId) clearInterval(intervalId);
             }
         });
     </script>
