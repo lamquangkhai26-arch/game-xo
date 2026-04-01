@@ -1,344 +1,246 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>XO Pro Max</title>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: linear-gradient(135deg, #74ABE2, #5563DE);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  color: #fff;
-}
-
-.card {
-  width: 92vw;
-  max-width: 500px;
-  background: #fff;
-  color: #333;
-  padding: 25px;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-  text-align: center;
-}
-
-/* SCORE */
-.score {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
-/* BOARD */
-.board {
-  display: grid;
-  grid-template-columns: repeat(3, 110px);
-  grid-template-rows: repeat(3, 110px);
-  gap: 10px;
-  justify-content: center;
-}
-
-.cell {
-  background: #fff;
-  font-size: 45px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.cell:active { transform: scale(0.85); }
-
-.highlight { background: gold !important; }
-
-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border: none;
-  border-radius: 10px;
-  background: #5563DE;
-  color: white;
-}
-
-select {
-  padding: 10px;
-  width: 100%;
-  margin-top: 10px;
-}
-
-/* CONFETTI */
-.confetti {
-  position: fixed;
-  width: 8px;
-  height: 8px;
-  top: 0;
-  animation: fall linear forwards;
-}
-
-@keyframes fall {
-  to { transform: translateY(100vh) rotate(720deg); }
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Game XO</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #74ABE2, #5563DE);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+    }
+    .card {
+      background: #fff;
+      color: #333;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 300px;
+      transition: transform 0.3s;
+    }
+    .card:hover { transform: scale(1.05); }
+    button {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      background: #5563DE;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover { background: #3740a3; }
+    #game {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .cell {
+      background: #fff;
+      color: #333;
+      font-size: 48px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .cell:active { transform: scale(0.9); }
+    .highlight { background: #ffeb3b !important; }
+    #status {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    #menuBtn {
+      margin-top: 20px;
+      background: #e74c3c;
+    }
+    canvas#confetti {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+  </style>
 </head>
-
 <body>
-
-<div id="menu" class="card">
-  <h2>🎮 XO PRO MAX</h2>
-  <select id="level">
-    <option value="easy">Dễ</option>
-    <option value="medium">Trung bình</option>
-    <option value="hard">Khó</option>
-  </select>
-  <button onclick="startGame('ai')">Chơi với AI</button>
-  <button onclick="startGame('2p')">2 Người</button>
-</div>
-
-<div id="game" class="card" style="display:none">
-  <div class="score">
-    <div>X: <span id="xScore">0</span></div>
-    <div>O: <span id="oScore">0</span></div>
-    <div>Hòa: <span id="drawScore">0</span></div>
+  <div id="menu" class="card">
+    <h2>Game XO</h2>
+    <button onclick="startGame('ai')">Chơi với AI</button>
+    <button onclick="startGame('2p')">Chơi 2 người</button>
   </div>
 
-  <div id="status"></div>
-  <div class="board" id="board"></div>
+  <div id="game">
+    <div class="board" id="board"></div>
+    <div id="status"></div>
+    <button onclick="restart()">Chơi lại</button>
+    <button id="menuBtn" onclick="backToMenu()">Quay lại menu</button>
+  </div>
 
-  <button onclick="restart()">Chơi lại</button>
-  <button onclick="back()">Menu</button>
-</div>
+  <canvas id="confetti"></canvas>
 
-<audio id="clickSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
-<audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+  <audio id="clickSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+  <audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+  <audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop></audio>
 
 <script>
 let board = Array(9).fill(null);
-let current = 'X';
+let currentPlayer = 'X';
+let mode = '2p';
 let gameOver = false;
-let mode = 'ai';
 
-let score = {X:0, O:0, draw:0};
-
-function startGame(m){
-  mode = m;
-  document.getElementById("menu").style.display="none";
-  document.getElementById("game").style.display="block";
-  createBoard();
+function startGame(selectedMode) {
+  mode = selectedMode;
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('game').style.display = 'flex';
+  document.getElementById('board').innerHTML = '';
+  board = Array(9).fill(null);
+  currentPlayer = 'X';
+  gameOver = false;
+  document.getElementById('status').textContent = '';
+  for (let i=0; i<9; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.dataset.index = i;
+    cell.addEventListener('click', handleClick);
+    document.getElementById('board').appendChild(cell);
+  }
+  document.getElementById('bgMusic').play();
 }
 
-function createBoard(){
-  const b=document.getElementById("board");
-  b.innerHTML="";
-  board=Array(9).fill(null);
-  current='X';
-  gameOver=false;
-  document.getElementById("status").textContent="Lượt: X";
-
-  for(let i=0;i<9;i++){
-    let cell=document.createElement("div");
-    cell.className="cell";
-    cell.onclick=()=>move(i);
-    b.appendChild(cell);
+function handleClick(e) {
+  const idx = e.target.dataset.index;
+  if (board[idx] || gameOver) return;
+  board[idx] = currentPlayer;
+  e.target.textContent = currentPlayer;
+  document.getElementById('clickSound').play();
+  if (checkWin()) return;
+  currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+  if (mode === 'ai' && currentPlayer === 'O') {
+    aiMove();
   }
 }
 
-function move(i){
-  if(board[i]||gameOver) return;
-
-  board[i]=current;
-  render();
-  playClick();
-
-  if(checkWin()) return;
-
-  current = current==='X'?'O':'X';
-  document.getElementById("status").textContent="Lượt: "+current;
-
-  if(mode==="ai" && current==="O"){
-    setTimeout(aiMove,300);
-  }
-}
-
-function render(){
-  document.querySelectorAll(".cell").forEach((c,i)=>{
-    c.textContent = board[i] || "";
-  });
-}
-
-function checkWin(){
-  const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-
-  for(let combo of wins){
-    let [a,b,c]=combo;
-    if(board[a] && board[a]===board[b] && board[a]===board[c]){
-      gameOver=true;
+function checkWin() {
+  const wins = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  for (let combo of wins) {
+    const [a,b,c] = combo;
+    if (board[a] && board[a]===board[b] && board[a]===board[c]) {
+      gameOver = true;
+      document.getElementById('status').textContent = board[a] + ' thắng!';
+      document.getElementById('winSound').play();
       highlight(combo);
-      end(board[a]+" thắng!");
-      score[board[a]]++;
-      updateScore();
+      launchConfetti();
       return true;
     }
   }
-
-  if(!board.includes(null)){
-    gameOver=true;
-    end("Hòa!");
-    score.draw++;
-    updateScore();
+  if (!board.includes(null)) {
+    gameOver = true;
+    document.getElementById('status').textContent = 'Hòa!';
     return true;
   }
-
   return false;
 }
 
-function highlight(c){
-  c.forEach(i=>{
-    document.querySelectorAll(".cell")[i].classList.add("highlight");
+function highlight(combo) {
+  combo.forEach(i=>{
+    document.querySelector(`.cell[data-index='${i}']`).classList.add('highlight');
   });
 }
 
-function updateScore(){
-  document.getElementById("xScore").textContent=score.X;
-  document.getElementById("oScore").textContent=score.O;
-  document.getElementById("drawScore").textContent=score.draw;
+function restart() {
+  startGame(mode);
 }
 
-function end(msg){
-  document.getElementById("status").textContent=msg;
-  document.getElementById("winSound").play();
-  confettiBoom();
+function backToMenu() {
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('menu').style.display = 'block';
+  document.getElementById('bgMusic').pause();
+  document.getElementById('bgMusic').currentTime = 0;
 }
 
-function restart(){
-  createBoard();
-}
-
-function back(){
-  document.getElementById("game").style.display="none";
-  document.getElementById("menu").style.display="block";
-}
-
-function playClick(){
-  let s=document.getElementById("clickSound");
-  s.currentTime=0;
-  s.play();
-}
-
-/* AI LEVEL */
-function aiMove(){
-  let level=document.getElementById("level").value;
-
-  if(level==="easy"){
-    randomMove();
-  }else if(level==="medium"){
-    blockMove() || randomMove();
-  }else{
-    bestMove();
-  }
-}
-
-function randomMove(){
-  let empty=board.map((v,i)=>v?null:i).filter(v=>v!==null);
-  let move=empty[Math.floor(Math.random()*empty.length)];
-  moveAI(move);
-}
-
-function blockMove(){
-  const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-  for(let c of wins){
-    let [a,b,c2]=c;
-    let arr=[board[a],board[b],board[c2]];
-    if(arr.filter(v=>v==='X').length===2 && arr.includes(null)){
-      let idx=[a,b,c2][arr.indexOf(null)];
-      moveAI(idx);
-      return true;
-    }
-  }
-  return false;
-}
-
-function bestMove(){
-  let best=-Infinity, move;
-  for(let i=0;i<9;i++){
-    if(!board[i]){
-      board[i]='O';
-      let score=minimax(false);
-      board[i]=null;
-      if(score>best){best=score; move=i;}
-    }
-  }
-  moveAI(move);
-}
-
-function minimax(isMax){
-  let res=checkWinnerMini();
-  if(res!==null) return res;
-
-  if(isMax){
-    let best=-Infinity;
-    for(let i=0;i<9;i++){
-      if(!board[i]){
-        board[i]='O';
-        best=Math.max(best,minimax(false));
-        board[i]=null;
+// AI với Minimax
+function aiMove() {
+  let bestScore = -Infinity;
+  let move;
+  for (let i=0; i<9; i++) {
+    if (!board[i]) {
+      board[i] = 'O';
+      let score = minimax(board, 0, false);
+      board[i] = null;
+      if (score > bestScore) {
+        bestScore = score;
+        move = i;
       }
     }
-    return best;
-  }else{
-    let best=Infinity;
-    for(let i=0;i<9;i++){
-      if(!board[i]){
-        board[i]='X';
-        best=Math.min(best,minimax(true));
-        board[i]=null;
+  }
+  board[move] = 'O';
+  const cell = document.querySelector(`.cell[data-index='${move}']`);
+  cell.textContent = 'O';
+  document.getElementById('clickSound').play();
+  if (checkWin()) return;
+  currentPlayer = 'X';
+}
+
+function minimax(newBoard, depth, isMaximizing) {
+  if (winner(newBoard)==='O') return 10 - depth;
+  if (winner(newBoard)==='X') return depth - 10;
+  if (!newBoard.includes(null)) return 0;
+
+  if (isMaximizing) {
+    let bestScore = -Infinity;
+    for (let i=0; i<9; i++) {
+      if (!newBoard[i]) {
+        newBoard[i] = 'O';
+        let score = minimax(newBoard, depth+1, false);
+        newBoard[i] = null;
+        bestScore = Math.max(score, bestScore);
       }
     }
-    return best;
-  }
-}
-
-function checkWinnerMini(){
-  const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-  for(let c of wins){
-    let [a,b,c2]=c;
-    if(board[a] && board[a]===board[b] && board[a]===board[c2]){
-      return board[a]==='O'?1:-1;
+    return bestScore;
+  } else {
+    let bestScore = Infinity;
+    for (let i=0; i<9; i++) {
+      if (!newBoard[i]) {
+        newBoard[i] = 'X';
+        let score = minimax(newBoard, depth+1, true);
+        newBoard[i] = null;
+        bestScore = Math.min(score, bestScore);
+      }
     }
-  }
-  if(!board.includes(null)) return 0;
-  return null;
-}
-
-function moveAI(i){
-  board[i]='O';
-  render();
-  playClick();
-  if(checkWin()) return;
-  current='X';
-  document.getElementById("status").textContent="Lượt: X";
-}
-
-/* CONFETTI MẠNH */
-function confettiBoom(){
-  for(let i=0;i<300;i++){
-    let d=document.createElement("div");
-    d.className="confetti";
-    d.style.left=Math.random()*100+"vw";
-    d.style.background=`hsl(${Math.random()*360},100%,50%)`;
-    d.style.animationDuration=(Math.random()*2+2)+"s";
-    document.body.appendChild(d);
-    setTimeout(()=>d.remove(),4000);
+    return bestScore;
   }
 }
-</script>
 
-</body>
-</html>
+function winner(b) {
+  const wins = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  for (let combo of wins) {
+    const [a,b,c] = combo;
+    if (b[a] && b[a]===b[b] && b[a]===b[c]) return b[a];
+  }
